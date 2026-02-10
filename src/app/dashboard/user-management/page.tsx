@@ -38,11 +38,14 @@ const UserManagementPage = () => {
       const roleParam = selectedRole !== 'all' ? `&role=${selectedRole.toLowerCase()}` : '';
       const searchParam = searchTerm ? `&search=${searchTerm}` : '';
       
+      const token = getCookieAuthToken();
+      
       const response = await fetch(
         `http://localhost:3001/api/admin?page=${page}&limit=${pagination.itemsPerPage}${roleParam}${searchParam}`,
         {
           headers: {
-            'accept': 'application/json'
+            'accept': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -88,10 +91,12 @@ const UserManagementPage = () => {
 
     try {
       setIsDeleting(true);
+      const token = getCookieAuthToken();
       const response = await fetch(`http://localhost:3001/api/admin/${adminToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
       });
 

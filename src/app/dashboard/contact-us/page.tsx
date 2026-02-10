@@ -33,15 +33,58 @@ const ContactUsPage: React.FC = () => {
     maxPageReached: 1
   });
 
+  const fetchContacts = async (page: number = 1) => {
+    try {
+      setLoading(true);
+      const token = getCookieAuthToken();
+      const searchParam = searchQuery ? `&search=${searchQuery}` : '';
+      
+      const response = await fetch(
+        `http://localhost:3001/api/contact-us?page=${page}&limit=${pagination.itemsPerPage}${searchParam}`,
+        {
+          headers: {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setContactEntries(result.data);
+        const { pagination: apiPagination } = result;
+        setPagination(prev => ({
+          ...prev,
+          currentPage: apiPagination.currentPage,
+          hasMore: apiPagination.hasMore,
+          totalItems: apiPagination.total,
+          maxPageReached: Math.max(prev.maxPageReached, apiPagination.currentPage)
+        }));
+      } else {
+        toast.error(result.message || 'Failed to fetch contact requests');
+      }
+    } catch (error) {
+      console.error('Error fetching contact requests:', error);
+      toast.error('Failed to fetch contact requests');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setLoading(false);
+    fetchContacts(1);
   }, []);
 
   const handlePageChange = (page: number) => {
+    fetchContacts(page);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleSearch = () => {
+    fetchContacts(1);
   };
 
   const handleViewDetails = (contact: ContactUsInterface) => {
@@ -83,9 +126,7 @@ const ContactUsPage: React.FC = () => {
               className="px-3 py-1.5 border border-theme-border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-theme-primary/20 focus:border-theme-primary bg-theme-background text-theme-foreground text-sm w-48"
             />
             
-            <Button onClick={() => {
-             
-            }} variant="outline" size="sm">
+            <Button onClick={handleSearch} variant="outline" size="sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>

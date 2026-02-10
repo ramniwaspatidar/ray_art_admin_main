@@ -71,12 +71,13 @@ const LoginForm: React.FC = () => {
 
       if (data && data.success) {
         // Store user role if available
-        if (data.data && data.data.role) {
-          setUserRole(data.data.role);
+        if (data.data?.admin?.role) {
+          setUserRole(data.data.admin.role);
         }
 
-        // Use email as a temporary authToken if explicit token is missing
-        const token = data.token || data.data?.email;
+        // Use accessToken from the response
+        const token = data.data?.accessToken;
+        
         if (token) {
           setCookieAuthToken(token);
           toastService.success(data.message || LOGIN_FORM.LOGIN_SUCCESS || 'Login successful!');
