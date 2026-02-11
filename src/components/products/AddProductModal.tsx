@@ -99,8 +99,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
       const isEditing = !!product?.id;
       const url = isEditing 
-        ? `http://localhost:3001/api/products/${product.id}` 
-        : 'http://localhost:3001/api/products';
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${product.id}` 
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/products`;
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',

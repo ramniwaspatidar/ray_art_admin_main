@@ -45,7 +45,7 @@ const ProductsPage: React.FC = () => {
 
     try {
       setIsDeleting(true);
-      const response = await fetch(`http://localhost:3001/api/products/${productToDelete.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products/${productToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'accept': 'application/json'
@@ -73,7 +73,7 @@ const ProductsPage: React.FC = () => {
   const fetchProducts = async (page: number = 1) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/products?page=${page}&limit=${pagination.itemsPerPage}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/products?page=${page}&limit=${pagination.itemsPerPage}`);
       const result = await response.json();
 
       if (result.success && result.data) {

@@ -35,7 +35,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
     try {
       setIsSubmitting(true);
 
-      const response = await fetch('http://localhost:3001/api/admin', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

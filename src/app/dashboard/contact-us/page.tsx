@@ -39,7 +39,7 @@ const ContactUsPage: React.FC = () => {
       const searchParam = searchQuery ? `&search=${searchQuery}` : '';
       
       const response = await fetch(
-        `http://localhost:3001/api/contact-us?page=${page}&limit=${pagination.itemsPerPage}${searchParam}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/contact-us?page=${page}&limit=${pagination.itemsPerPage}${searchParam}`,
         {
           headers: {
             'accept': 'application/json',

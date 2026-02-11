@@ -51,7 +51,7 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/admin/validate', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/validate`, {
         method: 'POST',
         headers: {
           'accept': 'application/json',

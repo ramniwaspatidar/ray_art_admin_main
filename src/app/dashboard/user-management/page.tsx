@@ -41,7 +41,7 @@ const UserManagementPage = () => {
       const token = getCookieAuthToken();
       
       const response = await fetch(
-        `http://localhost:3001/api/admin?page=${page}&limit=${pagination.itemsPerPage}${roleParam}${searchParam}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin?page=${page}&limit=${pagination.itemsPerPage}${roleParam}${searchParam}`,
         {
           headers: {
             'accept': 'application/json',
@@ -92,7 +92,7 @@ const UserManagementPage = () => {
     try {
       setIsDeleting(true);
       const token = getCookieAuthToken();
-      const response = await fetch(`http://localhost:3001/api/admin/${adminToDelete.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/${adminToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'accept': 'application/json',
