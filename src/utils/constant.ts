@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
   GET_USERS: '/admin-auth/admin/users',
   DELETE_ADMIN: '/admin-auth/admin/delete/',
   UPDATE_USER_ROLE: '/admin-auth/admin/update-role/',
+  ADMIN_UPLOAD_FILE: '/admin-auth/upload',
 };
 
 export const BUTTONS = {

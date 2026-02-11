@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { toastService } from '@/lib/toast';
-import { RESET_PASSWORD } from '@/utils/constant';
+import { API_ENDPOINTS } from '@/utils/constant';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -67,7 +67,7 @@ const ResetPasswordContent: React.FC = () => {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/${RESET_PASSWORD}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/${API_ENDPOINTS.RESET_PASSWORD}`,
         {
           method: 'POST',
           headers: {
