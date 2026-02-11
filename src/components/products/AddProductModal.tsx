@@ -7,11 +7,7 @@ import Dropdown from '@/components/ui/Dropdown';
 import { PRODUCTS_PAGE, PRODUCT_CATEGORIES, PRODUCT_SUB_CATEGORIES } from '@/utils/constant';
 import toast from 'react-hot-toast';
 import { uploadImageAction } from '@/app/actions/upload';
-import { Cloudinary } from "@cloudinary/url-gen";
-import { fill } from "@cloudinary/url-gen/actions/resize";
-import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
-import { auto } from "@cloudinary/url-gen/qualifiers/quality";
-import { format, quality } from "@cloudinary/url-gen/actions/delivery";
+
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -87,27 +83,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         const uploadResult = await uploadImageAction(formData);
         
         if (uploadResult.success && uploadResult.url && uploadResult.publicId) {
-          // Initialize Cloudinary instance for URL generation
-          const cld = new Cloudinary({
-            cloud: {
-              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_NAME || 'dxdglyi74'
-            }
-          });
-
-          // Generate transformed URL using the SDK as per the user's reference
-          const myImage = cld.image(uploadResult.publicId);
-          
-          myImage
-            .resize(
-              fill()
-                .width(433)
-                .aspectRatio(0.5)
-                .gravity(autoGravity())
-            )
-            .delivery(quality(auto()))
-            .delivery(format(auto()));
-
-          imageUrl = myImage.toURL();
+          imageUrl = uploadResult.url;
         } else {
           throw new Error(uploadResult.message || 'Image upload failed');
         }

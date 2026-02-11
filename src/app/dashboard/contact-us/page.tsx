@@ -11,8 +11,7 @@ import { getCookieAuthToken } from '@/utils/auth';
 
 interface ContactUsInterface {
   id: string;
-  firstname: string;
-  lastname: string;
+  name: string;
   email: string;
   topic: string;
   message: string;
@@ -98,7 +97,7 @@ const ContactUsPage: React.FC = () => {
   };
 
  
-  const truncateMessage = (message: string, maxLength: number = 200) => {
+  const truncateMessage = (message: string, maxLength: number = 25) => {
     if (!message) return '';
     if (message.length <= maxLength) return message;
     return message.substring(0, maxLength) + '...';
@@ -152,10 +151,7 @@ const ContactUsPage: React.FC = () => {
                       <th className="table-header-text px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                         {CONTACT_US_PAGE.EMAIL}
                       </th>
-                      <th className="table-header-text px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
-                      {CONTACT_US_PAGE.SUBJECT}
-
-                      </th>
+                     
                       <th className="table-header-text px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
                         {TABLE_HEADERS.CREATED}
                       </th>
@@ -186,7 +182,7 @@ const ContactUsPage: React.FC = () => {
                       </tr>
                     ) : (
                       contactEntries.map((entry, index) => {
-                        const fullName = `${entry.firstname || ''} ${entry.lastname || ''}`.trim();
+                        const fullName = entry.name.trim();
                         return (
                           <tr
                             key={`${entry.id}-${index}`}
@@ -215,11 +211,7 @@ const ContactUsPage: React.FC = () => {
                                 {entry.email || LABELS.NOT_AVAILABLE}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-theme-foreground max-w-xs truncate">
-                                {entry.topic || LABELS.NOT_AVAILABLE}
-                              </div>
-                            </td>
+                       
 
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
                               <div className="flex flex-col">
@@ -227,7 +219,7 @@ const ContactUsPage: React.FC = () => {
                               </div>
                             </td>
                              <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
-                               <div className="max-w-xs truncate">
+                               <div className="max-w-md">
                                  <span>{truncateMessage(entry.message || '')}</span>
                                </div>
                              </td>
@@ -259,27 +251,6 @@ const ContactUsPage: React.FC = () => {
                                      />
                                    </svg>
                                    {CONTACT_US_PAGE.VIEW_DETAILS}
-                                 </Button>
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   onClick={() => handleSendReply(entry)}
-                                   className="shadow-sm hover:shadow-md transition-shadow duration-200"
-                                 >
-                                   <svg
-                                     className="w-4 h-4 mr-1"
-                                     fill="none"
-                                     stroke="currentColor"
-                                     viewBox="0 0 24 24"
-                                   >
-                                     <path
-                                       strokeLinecap="round"
-                                       strokeLinejoin="round"
-                                       strokeWidth={2}
-                                       d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                     />
-                                   </svg>
-                                   Send Reply
                                  </Button>
                                </div>
                              </td>
