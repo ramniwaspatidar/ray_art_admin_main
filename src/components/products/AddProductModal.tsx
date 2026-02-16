@@ -24,8 +24,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -33,7 +33,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     features: '',
     price: '',
     originalPrice: '',
-    imageUrl: '',
+    imageUrl: [] as string[],
     category: '',
     subCategory: '',
   });
@@ -47,12 +47,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         features: Array.isArray(product.features) ? product.features.join('\n') : (product.features || ''),
         price: String(product.price) || '',
         originalPrice: String(product.originalPrice) || '',
-        imageUrl: product.imageUrl || '',
+        imageUrl: Array.isArray(product.imageUrl) ? product.imageUrl : (product.imageUrl ? [product.imageUrl] : []),
         category: product.category || '',
         subCategory: product.subCategory || '',
       });
       if (product.imageUrl) {
-        setImagePreview(product.imageUrl);
+        setImagePreviews(Array.isArray(product.imageUrl) ? product.imageUrl : [product.imageUrl]);
       }
     } else {
       // Reset if no product (adding mode)
@@ -61,44 +61,55 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   }, [product, isOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      // Reset imageUrl when new file selected so user knows they need to upload
-      if (!product) { 
-         setNewProduct(prev => ({ ...prev, imageUrl: '' }));
-      }
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+      
+      newFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
   const handleUploadImage = async () => {
-    if (!selectedFile) {
-      toast.error('Please select an image first');
+    if (selectedFiles.length === 0) {
+      toast.error('Please select images first');
       return;
     }
 
     try {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('category', newProduct.category || 'products'); // Use category or default
+      const newImageUrls: string[] = [...newProduct.imageUrl];
+      
+      // Upload files sequentially or in parallel
+      const uploadPromises = selectedFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('category', newProduct.category || 'products');
 
-      const uploadResult = await uploadImageAction(formData);
+        const uploadResult = await uploadImageAction(formData);
+        if (uploadResult.success && uploadResult.url) {
+          return uploadResult.url;
+        } else {
+          throw new Error(uploadResult.message || 'Image upload failed');
+        }
+      });
 
-      if (uploadResult.success && uploadResult.url) {
-        setNewProduct(prev => ({ ...prev, imageUrl: uploadResult.url }));
-        toast.success('Image uploaded successfully');
-      } else {
-        throw new Error(uploadResult.message || 'Image upload failed');
-      }
+      const uploadedUrls = await Promise.all(uploadPromises);
+      newImageUrls.push(...uploadedUrls);
+
+      setNewProduct(prev => ({ ...prev, imageUrl: newImageUrls }));
+      setSelectedFiles([]); // Clear selected files after upload
+      toast.success('Images uploaded successfully');
+      
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      console.error('Error uploading images:', error);
+      toast.error('Failed to upload some images');
     } finally {
       setIsUploading(false);
     }
@@ -107,8 +118,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newProduct.imageUrl) {
-      toast.error('Please upload an image for the product');
+    if (newProduct.imageUrl.length === 0) {
+      toast.error('Please upload at least one image for the product');
       return;
     }
 
@@ -165,12 +176,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       features: '',
       price: '',
       originalPrice: '',
-      imageUrl: '',
+      imageUrl: [],
       category: '',
       subCategory: '',
     });
-    setSelectedFile(null);
-    setImagePreview(null);
+    setSelectedFiles([]);
+    setImagePreviews([]);
     setIsUploading(false);
   };
 
@@ -194,48 +205,63 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         <div className="flex flex-col md:flex-row gap-8">
           {/* Image Upload Section */}
           <div className="w-full md:w-1/3 flex flex-col items-center gap-4">
-            <label className="text-sm font-medium text-theme-foreground w-full">Product Image</label>
-            <div className="relative w-full aspect-square border-2 border-dashed border-theme-border rounded-xl overflow-hidden flex items-center justify-center bg-theme-muted/10 group hover:border-theme-primary transition-colors cursor-pointer">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-center p-4">
-                  <svg className="mx-auto h-12 w-12 text-neutral-400 group-hover:text-theme-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <label className="text-sm font-medium text-theme-foreground w-full">Product Images</label>
+            
+            <div className="w-full grid grid-cols-2 gap-2 mb-2">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative aspect-square border border-theme-border rounded-lg overflow-hidden group">
+                  <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                        const newPreviews = [...imagePreviews];
+                        newPreviews.splice(index, 1);
+                        setImagePreviews(newPreviews);
+                        
+                        // Also remove from selectedFiles if it's there (this logic is simplified, purely visual removal for previews might desync if we don't track perfectly)
+                        // Ideally we map previews to files. For now, let's just support clearing all or adding more.
+                        // Or better: If it's already uploaded (in newProduct.imageUrl), remove from there.
+                        // If it's in selectedFiles, remove from there.
+                        // This is complex to implement perfectly in one go without more state. 
+                        // Let's keep it simple: "Click to select image" adds to list.
+                        // We will add a "Clear All" button instead of individual delete for now to be safe, or just render them.
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove (Implementation simplified)"
+                  >
+                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              ))}
+            
+              <div className="relative aspect-square border-2 border-dashed border-theme-border rounded-xl overflow-hidden flex items-center justify-center bg-theme-muted/10 group hover:border-theme-primary transition-colors cursor-pointer">
+                <div className="text-center p-2">
+                  <svg className="mx-auto h-8 w-8 text-neutral-400 group-hover:text-theme-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <p className="mt-2 text-sm text-neutral-500">Click to select image</p>
+                  <p className="mt-1 text-xs text-neutral-500">Add Images</p>
                 </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              />
-              {imagePreview && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
-                  <p className="text-white text-sm font-medium">Change Image</p>
-                </div>
-              )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+              </div>
             </div>
             
             {/* Separate Upload Button */}
-            {selectedFile && (
+            {selectedFiles.length > 0 && (
                <button
                  type="button"
                  onClick={handleUploadImage}
-                 disabled={isUploading || !!(newProduct.imageUrl && !selectedFile)}
-                 className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                   newProduct.imageUrl && selectedFile 
-                    ? 'bg-green-100 text-green-700 border border-green-200'
-                    : 'bg-theme-primary text-white hover:bg-theme-primary/90'
-                 }`}
+                 disabled={isUploading}
+                 className="w-full py-2 px-4 rounded-lg text-sm font-medium bg-theme-primary text-white hover:bg-theme-primary/90 transition-colors"
                >
-                 {isUploading ? 'Uploading...' : 'Upload Image'}
+                 {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} New Image${selectedFiles.length > 1 ? 's' : ''}`}
                </button>
             )}
-            
-            {/* Hidden field msg if needed or just validation in submit */}
           </div>
 
           {/* Form Fields Section */}

@@ -16,7 +16,7 @@ interface Product {
   features?: string[] | null;
   price: string;
   originalPrice: string | null;
-  imageUrl: string | null;
+  imageUrl: string | string[] | null;
   category: string;
   subCategory: string;
   createdAt: string;

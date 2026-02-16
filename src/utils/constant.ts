@@ -360,6 +360,7 @@ export const PRODUCTS_PAGE = {
   PRICE: 'Price',
   STOCK: 'Stock',
   STATUS: 'Status',
+  IMAGE: 'Image',
 
   // Toast Messages
   FETCH_FAILED: 'Failed to fetch products. Please try again.',
